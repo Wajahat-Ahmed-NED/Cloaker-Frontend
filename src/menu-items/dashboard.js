@@ -10,14 +10,30 @@ const icons = {
 
 const dashboard = {
     id: 'group-dashboard',
-    title: 'Navigation',
+
     type: 'group',
     children: [
         {
             id: 'dashboard',
-            title: 'Dashboard',
+            title: 'Countries',
             type: 'item',
-            url: '/dashboard/default',
+            url: '/sample-page',
+            icon: icons.DashboardOutlined,
+            breadcrumbs: false
+        },
+        {
+            id: 'thirdparty',
+            title: 'Third Party URL',
+            type: 'item',
+            url: '/third-party',
+            icon: icons.DashboardOutlined,
+            breadcrumbs: false
+        },
+        {
+            id: 'uploadFB',
+            title: 'Upload Database',
+            type: 'item',
+            url: '/upload-database',
             icon: icons.DashboardOutlined,
             breadcrumbs: false
         }

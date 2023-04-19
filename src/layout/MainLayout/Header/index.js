@@ -31,7 +31,7 @@ const Header = ({ open, handleDrawerToggle }) => {
                 color="secondary"
                 sx={{ color: 'text.primary', bgcolor: open ? iconBackColorOpen : iconBackColor, ml: { xs: 0, lg: -2 } }}
             >
-                {!open ? <MenuUnfoldOutlined /> : <MenuFoldOutlined />}
+                {!open ? <MenuFoldOutlined /> : <MenuUnfoldOutlined />}
             </IconButton>
             <HeaderContent />
         </Toolbar>

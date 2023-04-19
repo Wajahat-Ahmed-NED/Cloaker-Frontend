@@ -1,27 +1,25 @@
-import { Link } from 'react-router-dom';
-
 // material-ui
 import { Grid, Stack, Typography } from '@mui/material';
 
 // project import
-import AuthLogin from './auth-forms/AuthLogin';
+import AuthChangePassword from './auth-forms/AuthChangePassword';
 import AuthWrapper from './AuthWrapper';
 
 // ================================|| LOGIN ||================================ //
 
-const Login = () => (
+const ChangePassword = () => (
     <AuthWrapper>
         <Grid container spacing={3}>
             <Grid item xs={12}>
                 <Stack direction="row" justifyContent="center" alignItems="baseline" sx={{ mb: { xs: -0.5, sm: 0.5 } }}>
-                    <Typography variant="h3">Welcome Back</Typography>
+                    <Typography variant="h3">Change Password</Typography>
                 </Stack>
             </Grid>
             <Grid item xs={12}>
-                <AuthLogin />
+                <AuthChangePassword />
             </Grid>
         </Grid>
     </AuthWrapper>
 );
 
-export default Login;
+export default ChangePassword;
