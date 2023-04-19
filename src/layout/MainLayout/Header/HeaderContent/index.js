@@ -15,7 +15,8 @@ const HeaderContent = () => {
 
     return (
         <>
-            {!matchesXs && <Search style={{ visibility: 'hidden' }} />}
+            <Search style={{ visibility: 'hidden !important' }} />
+            {/* {matchesXs && <Search style={{ visibility: 'hidden' }} />} */}
             {matchesXs && <Box sx={{ width: '100%', ml: 1 }} />}
 
             {!matchesXs && <Profile />}

@@ -30,8 +30,7 @@ import Button from '@mui/material/Button';
 import { blockAll, cloakerApi, getCountries, setURL, updateBlock } from 'api/api';
 import Modal from '@mui/material/Modal';
 import Swal from 'sweetalert2';
-import crypto from 'crypto';
-import sha256 from 'crypto-js/sha256';
+import CryptoJS from 'crypto-js';
 
 // const crypto = require('crypto');
 
@@ -137,18 +136,12 @@ function EnhancedTableHead(props) {
                         padding={headCell.disablePadding ? 'none' : 'normal'}
                         // sortDirection={orderBy === headCell.id ? order : false}
                     >
-                        <TableSortLabel
-                            active={orderBy === headCell.id}
-                            // direction={orderBy === headCell.id ? order : 'asc'}
-                            onClick={createSortHandler(headCell.id)}
-                        >
-                            {headCell.label}
-                            {/* {orderBy === headCell.id ? (
+                        {headCell.label}
+                        {/* {orderBy === headCell.id ? (
                                 <Box component="span" sx={visuallyHidden}>
                                     {order === 'desc' ? 'sorted descending' : 'sorted ascending'}
                                 </Box>
                             ) : null} */}
-                        </TableSortLabel>
                     </TableCell>
                 ))}
             </TableRow>
@@ -235,21 +228,13 @@ export default function Countries() {
         if (age === 'true') {
             let blockedRows = rows.filter((e) => e.blocked === 'true');
 
-            let rowsOnMount = stableSort(blockedRows, getComparator(DEFAULT_ORDER, DEFAULT_ORDER_BY));
-
-            rowsOnMount = rowsOnMount.slice(0 * DEFAULT_ROWS_PER_PAGE, 0 * DEFAULT_ROWS_PER_PAGE + DEFAULT_ROWS_PER_PAGE);
-
-            setVisibleRows(rowsOnMount);
+            setVisibleRows(blockedRows);
         } else if (age === 'false') {
             let unBlockedRows = rows.filter((e) => e.blocked === 'false');
 
-            let rowsOnMount = stableSort(unBlockedRows, getComparator(DEFAULT_ORDER, DEFAULT_ORDER_BY));
-
-            rowsOnMount = rowsOnMount.slice(0 * DEFAULT_ROWS_PER_PAGE, 0 * DEFAULT_ROWS_PER_PAGE + DEFAULT_ROWS_PER_PAGE);
-
-            setVisibleRows(rowsOnMount);
+            setVisibleRows(unBlockedRows);
         } else {
-            getData();
+            setVisibleRows(rows);
         }
     };
 
@@ -259,11 +244,8 @@ export default function Countries() {
                 console.log(res.data.data);
                 let rows = res.data.data;
                 setRows(rows);
-                let rowsOnMount = stableSort(rows, getComparator(DEFAULT_ORDER, DEFAULT_ORDER_BY));
 
-                rowsOnMount = rowsOnMount.slice(0 * DEFAULT_ROWS_PER_PAGE, 0 * DEFAULT_ROWS_PER_PAGE + DEFAULT_ROWS_PER_PAGE);
-
-                setVisibleRows(rowsOnMount);
+                setVisibleRows(rows);
             })
             .catch((err) => {
                 alert(err.message);
@@ -379,17 +361,17 @@ export default function Countries() {
         const serverPort = '3000';
         const userKey = '51bcce7d781f86c0504ba207c8b9779830194767f7a3';
 
-        const signature = hash(userId + clientIp + userKey);
-        const signatureBase64 = btoa(signature);
-        const signatureUrlEncoded = encodeURIComponent(signatureBase64);
+        const hash = CryptoJS.SHA256(userId + clientIp + userKey);
+        const base64 = CryptoJS.enc.Base64.stringify(hash);
+        const sig = decodeURIComponent(base64);
 
-        console.log(signatureUrlEncoded);
+        console.log(sig);
         let newObj = {
             clientIp,
             userId,
             serverIp,
             serverPort,
-            key: signatureUrlEncoded
+            key: sig
         };
 
         setURL(obj)
@@ -402,13 +384,13 @@ export default function Countries() {
                         cloakerApi(newObj)
                             .then((res) => {
                                 if (res.data.proxy === false) {
-                                    Swal.fire('Proxy False', 'View the advertisement', 'success');
+                                    Swal.fire('Proxy Not Detected', 'View the advertisement', 'success');
                                 } else {
-                                    Swal.fire('IP Success', 'Redirecting to new window', 'success');
+                                    Swal.fire('Proxy Detected', 'Redirecting to new window', 'success');
                                 }
                                 console.log(res.data);
                             })
-                            .catch((err) => Swal.fire('IP Success Failed', err, 'error'));
+                            .catch((err) => Swal.fire('Operation Failed', err, 'error'));
                     }
                 });
             })
@@ -461,18 +443,12 @@ export default function Countries() {
                     e.url.toLowerCase().search(searched) !== -1
             );
             console.log(data);
-            let rowsOnMount = stableSort(data, getComparator(DEFAULT_ORDER, DEFAULT_ORDER_BY));
 
-            rowsOnMount = rowsOnMount.slice(0 * DEFAULT_ROWS_PER_PAGE, 0 * DEFAULT_ROWS_PER_PAGE + DEFAULT_ROWS_PER_PAGE);
-
-            setVisibleRows(rowsOnMount);
+            setVisibleRows(data);
         } else {
             console.log('Searching: ' + event.target.value);
-            let rowsOnMount = stableSort(rows, getComparator(DEFAULT_ORDER, DEFAULT_ORDER_BY));
 
-            rowsOnMount = rowsOnMount.slice(0 * DEFAULT_ROWS_PER_PAGE, 0 * DEFAULT_ROWS_PER_PAGE + DEFAULT_ROWS_PER_PAGE);
-
-            setVisibleRows(rowsOnMount);
+            setVisibleRows(rows);
         }
     };
     return (
@@ -506,8 +482,8 @@ export default function Countries() {
                         </FormControl>
                     </div>
 
-                    <TableContainer>
-                        <Table sx={{ minWidth: 750 }} aria-labelledby="tableTitle" size={dense ? 'small' : 'medium'}>
+                    <TableContainer style={{ maxHeight: '600px' }}>
+                        <Table sx={{ minWidth: 750 }} stickyHeader aria-label="sticky table" aria-labelledby="tableTitle" size="small">
                             <EnhancedTableHead
                                 numSelected={selected.length}
                                 order={order}
@@ -574,7 +550,7 @@ export default function Countries() {
                             </TableBody>
                         </Table>
                     </TableContainer>
-                    <TablePagination
+                    {/* <TablePagination
                         rowsPerPageOptions={[5, 10, 25]}
                         component="div"
                         count={rows.length}
@@ -582,7 +558,7 @@ export default function Countries() {
                         page={page}
                         onPageChange={handleChangePage}
                         onRowsPerPageChange={handleChangeRowsPerPage}
-                    />
+                    /> */}
                 </Paper>
                 {/* <FormControlLabel control={<Switch checked={dense} onChange={handleChangeDense} />} label="Dense padding" /> */}
             </Box>
