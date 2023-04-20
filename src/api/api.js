@@ -30,6 +30,11 @@ async function getCountries() {
     return await axios.get(`${api2}getCountries`);
     // }
 }
+async function getCountriesById(obj) {
+    // if (getToken() !== true) {
+    return await axios.post(`${api2}getCountriesById`, obj);
+    // }
+}
 async function signIn(obj) {
     // if (getToken() !== true) {
     return await axios.post(`${api2}signIn`, obj);
@@ -62,10 +67,8 @@ async function createThirdURL(obj) {
 }
 async function cloakerApi(obj) {
     // if (getToken() !== true) {
-    return await axios.get(
-        `https://aichecker.net/api/index.php?cip=${obj.clientIp}&uid=${obj.UserId}&sip=${obj.ServerIp}&spo=${obj.ServerPort}&key=${obj.Key}`
-    );
+    return await axios.post(`${api2}cloakerApi`, obj);
     // }
 }
 
-export { getCountries, signIn, setURL, updateBlock, blockAll, changePassword, cloakerApi, createThirdURL };
+export { getCountries, getCountriesById, signIn, setURL, updateBlock, blockAll, changePassword, cloakerApi, createThirdURL };

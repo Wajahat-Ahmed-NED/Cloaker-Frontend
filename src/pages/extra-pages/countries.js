@@ -31,6 +31,7 @@ import { blockAll, cloakerApi, getCountries, setURL, updateBlock } from 'api/api
 import Modal from '@mui/material/Modal';
 import Swal from 'sweetalert2';
 import CryptoJS from 'crypto-js';
+import advertisement from '../../assets/images/users/advertisement.PNG';
 
 // const crypto = require('crypto');
 
@@ -206,17 +207,15 @@ export default function Countries() {
     const [order, setOrder] = React.useState(DEFAULT_ORDER);
     const [orderBy, setOrderBy] = React.useState(DEFAULT_ORDER_BY);
     const [selected, setSelected] = React.useState([]);
-    const [page, setPage] = React.useState(0);
-    const [dense, setDense] = React.useState(false);
     const [visibleRows, setVisibleRows] = React.useState(null);
-    const [rowsPerPage, setRowsPerPage] = React.useState(DEFAULT_ROWS_PER_PAGE);
     const [paddingHeight, setPaddingHeight] = React.useState(0);
     const [age, setAge] = React.useState('');
     const [rows, setRows] = React.useState([]);
     const [row, setRow] = React.useState([]);
-    // const [urlModal, setURLModal] = React.useState(false);
+    const [add, setAdd] = React.useState(false);
     const [open, setOpen] = React.useState(false);
     const handleOpen = (row) => {
+        console.log(row);
         setOpen(true);
         setRow(row);
     };
@@ -255,21 +254,6 @@ export default function Countries() {
         getData();
     }, []);
 
-    const handleRequestSort = React.useCallback(
-        (event, newOrderBy) => {
-            const isAsc = orderBy === newOrderBy && order === 'asc';
-            const toggledOrder = isAsc ? 'desc' : 'asc';
-            setOrder(toggledOrder);
-            setOrderBy(newOrderBy);
-
-            const sortedRows = stableSort(rows, getComparator(toggledOrder, newOrderBy));
-            const updatedRows = sortedRows.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage);
-
-            setVisibleRows(updatedRows);
-        },
-        [order, orderBy, page, rowsPerPage]
-    );
-
     const handleSelectAllClick = (event) => {
         if (event.target.checked) {
             const newSelected = rows.map((n) => n.name);
@@ -296,82 +280,10 @@ export default function Countries() {
         setSelected(newSelected);
     };
 
-    const handleChangePage = React.useCallback(
-        (event, newPage) => {
-            setPage(newPage);
-
-            const sortedRows = stableSort(rows, getComparator(order, orderBy));
-            const updatedRows = sortedRows.slice(newPage * rowsPerPage, newPage * rowsPerPage + rowsPerPage);
-
-            setVisibleRows(updatedRows);
-
-            // Avoid a layout jump when reaching the last page with empty rows.
-            const numEmptyRows = newPage > 0 ? Math.max(0, (1 + newPage) * rowsPerPage - rows.length) : 0;
-
-            const newPaddingHeight = (dense ? 33 : 53) * numEmptyRows;
-            setPaddingHeight(newPaddingHeight);
-        },
-        [order, orderBy, dense, rowsPerPage]
-    );
-
-    const handleChangeRowsPerPage = React.useCallback(
-        (event) => {
-            const updatedRowsPerPage = parseInt(event.target.value, 10);
-            setRowsPerPage(updatedRowsPerPage);
-
-            setPage(0);
-
-            const sortedRows = stableSort(rows, getComparator(order, orderBy));
-            const updatedRows = sortedRows.slice(0 * updatedRowsPerPage, 0 * updatedRowsPerPage + updatedRowsPerPage);
-
-            setVisibleRows(updatedRows);
-
-            // There is no layout jump to handle on the first page.
-            setPaddingHeight(0);
-        },
-        [order, orderBy]
-    );
-
-    const handleChangeDense = (event) => {
-        setDense(event.target.checked);
-    };
-
-    // const checking = () => {
-    //     const user = 'myuser';
-    //     const clientIp = '192.168.0.1';
-    //     const userKey = 'my-secret-key';
-
-    //     const hash = crypto.createHash('sha256');
-    //     hash.update(user + clientIp + userKey);
-    //     const sig = hash.digest('binary');
-
-    //     const sigBase64 = btoa(sig);
-    //     const sigUrlEncoded = decodeURIComponent(sigBase64);
-    //     console.log(sigUrlEncoded);
-    // };
-
     const handleAddURL = () => {
         let obj = {
             id: row.id,
             url: row.url
-        };
-        const clientIp = row.url;
-        const userId = 'U106';
-        const serverIp = ' 192.168.43.37';
-        const serverPort = '3000';
-        const userKey = '51bcce7d781f86c0504ba207c8b9779830194767f7a3';
-
-        const hash = CryptoJS.SHA256(userId + clientIp + userKey);
-        const base64 = CryptoJS.enc.Base64.stringify(hash);
-        const sig = decodeURIComponent(base64);
-
-        console.log(sig);
-        let newObj = {
-            clientIp,
-            userId,
-            serverIp,
-            serverPort,
-            key: sig
         };
 
         setURL(obj)
@@ -379,14 +291,25 @@ export default function Countries() {
                 getData();
                 Swal.fire('URL Updated!', 'Done', 'success').then((res) => {
                     if (row.blocked === 'true') {
-                        Swal.fire('Country is Blocked!', 'View the advertisement!', 'success');
+                        Swal.fire('Country is Blocked!', 'View the advertisement!', 'success').then((res) => {
+                            setAdd(true);
+                        });
                     } else {
+                        // console.log(newObj);
+                        let newObj = {
+                            clientIp: row.url
+                        };
                         cloakerApi(newObj)
                             .then((res) => {
-                                if (res.data.proxy === false) {
-                                    Swal.fire('Proxy Not Detected', 'View the advertisement', 'success');
+                                if (res.data.proxy === false && res.data.success === true) {
+                                    Swal.fire('Proxy Not Detected', `IP passed the check`, 'success').then((res) => {
+                                        setAdd(true);
+                                    });
+                                } else if (res.data.success === true && res.data.proxy === true) {
+                                    Swal.fire('Proxy Detected', 'IP did not pass the check', 'success');
+                                    window.open('https://google.com', '_blank');
                                 } else {
-                                    Swal.fire('Proxy Detected', 'Redirecting to new window', 'success');
+                                    Swal.fire('API Says', res.data.reason, 'error');
                                 }
                                 console.log(res.data);
                             })
@@ -423,7 +346,7 @@ export default function Countries() {
         blockAll(obj)
             .then((res) => {
                 getData();
-                Swal.fire(`All Countries ${row.blocked === 'true' ? 'UnBlocked' : 'Blocked'}`, 'Done', 'success');
+                Swal.fire(`All Countries ${blocked === 'true' ? 'UnBlocked' : 'Blocked'}`, 'Done', 'success');
             })
             .catch((err) => {
                 Swal.fire(`Countries Not Update`, 'Not Done', 'error');
@@ -513,7 +436,7 @@ export default function Countries() {
                                                       {row.code}
                                                   </TableCell>
                                                   <TableCell align="center">{row.name}</TableCell>
-                                                  <TableCell align="center" onClick={() => handleOpen(row)}>
+                                                  <TableCell align="center" onClick={() => handleOpen(row, index)}>
                                                       {row.url === '' ? (
                                                           <Button color="primary" variant="contained">
                                                               SetURL
@@ -533,7 +456,6 @@ export default function Countries() {
                                                           </Button>
                                                       )}
                                                   </TableCell>
-                                                  {/* <TableCell align="right">{row.protein}</TableCell> */}
                                               </TableRow>
                                           );
                                       })
@@ -550,17 +472,7 @@ export default function Countries() {
                             </TableBody>
                         </Table>
                     </TableContainer>
-                    {/* <TablePagination
-                        rowsPerPageOptions={[5, 10, 25]}
-                        component="div"
-                        count={rows.length}
-                        rowsPerPage={rowsPerPage}
-                        page={page}
-                        onPageChange={handleChangePage}
-                        onRowsPerPageChange={handleChangeRowsPerPage}
-                    /> */}
                 </Paper>
-                {/* <FormControlLabel control={<Switch checked={dense} onChange={handleChangeDense} />} label="Dense padding" /> */}
             </Box>
 
             <div>
@@ -590,6 +502,24 @@ export default function Countries() {
                     </Box>
                 </Modal>
             </div>
+            {add && (
+                <Modal
+                    open={add}
+                    onClose={() => {
+                        setAdd(false);
+                    }}
+                    aria-labelledby="modal-modal-title"
+                    aria-describedby="modal-modal-description"
+                >
+                    <Box sx={style} style={{ maxHeight: '90%', overflow: 'auto' }}>
+                        <Typography id="modal-modal-title" variant="h4" component="h2">
+                            Advertisement
+                        </Typography>
+                        <hr />
+                        <img src={advertisement} alt="Advertisement" width="100%" />
+                    </Box>
+                </Modal>
+            )}
         </>
     );
 }
